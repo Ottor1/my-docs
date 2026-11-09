@@ -1,0 +1,19 @@
+site_name: Ottor1 的技术文档
+site_description: 使用 MkDocs Material 与 GitHub Actions 实现静态文档自动发布
+site_author: Ottor1
+site_url: https://ottor1.github.io/my-docs/
+repo_url: https://github.com/Ottor1/my-docs
+repo_name: Ottor1/my-docs
+theme:
+  name: material
+  language: zh
+nav:
+  - 首页: index.md
+  - 关于: about.md
+  - 使用指南: guide.md
+  - API 参考: api.md
+markdown_extensions:
+  - tables
+  - fenced_code
+  - toc:
+      permalink: true
