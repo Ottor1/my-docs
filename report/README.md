@@ -4,9 +4,10 @@
 
 - GitHub 登录名：Ottor1
 - 个人仓库：<https://github.com/Ottor1/my-docs>
+- 最终网站：<https://ottor1.github.io/my-docs/>
 - 实验环境：Windows、Python 3.13.9、MkDocs 1.6.1、MkDocs Material 9.8.0
 
-这次实验使用 MkDocs 搭建四页文档网站，并在仓库中编写 GitHub Actions 工作流。网站内容包括个人介绍、项目说明、使用指南和一个文档列表接口示例。
+这次实验使用 MkDocs 搭建四页文档网站，通过 GitHub Actions 完成首次发布和第二次内容更新。网站内容包括个人介绍、项目说明、使用指南和一个文档列表接口示例。
 
 ## 2. 实验过程
 
@@ -74,14 +75,46 @@ python -m venv .venv
 
 我在 `.github/workflows/deploy.yml` 中设置了 `build` 和 `deploy` 两个任务。`build` 使用 Python 3.12 安装依赖、严格构建文档，然后上传 `site/`；`deploy` 通过 `needs: build` 等待构建成功，再发布这份产物。
 
-| 配置 | 我的理解 |
-| --- | --- |
-| `push` | 推送到 `main`，且修改了文档、配置、依赖或工作流本身时，自动启动工作流 |
-| `workflow_dispatch` | 允许从 Actions 页面手动运行，方便重试和排错 |
-| `build` | 把 Markdown 源码构建成静态网页，并上传构建产物 |
-| `needs: build` | 构建成功后才运行部署任务 |
-| `pages: write`、`id-token: write` | 给部署任务发布 Pages 和验证身份所需的权限 |
-| `github-pages` | 保存网站部署记录，并应用相应的环境规则 |
+`push` -> 推送到 `main`，且修改了文档、配置、依赖或工作流本身时，自动启动工作流 
+`workflow_dispatch` -> 允许从 Actions 页面手动运行，方便重试和排错 
+`build` -> 把 Markdown 源码构建成静态网页，并上传构建产物 
+`needs: build` -> 构建成功后才运行部署任务 
+`pages: write`、`id-token: write` -> 给部署任务发布 Pages 和验证身份所需的权限 
+`github-pages` -> 保存网站部署记录，并应用相应的环境规则 
+
+### 2.6 首次构建和部署
+
+第一次将文档、配置和工作流推送到 main 后，Actions 自动运行。运行 #1 对应提交 5222a27，总状态为 Success，build 和 deploy 均成功，部署结果中给出了网站地址。
+
+- 首次提交：[5222a27](https://github.com/Ottor1/my-docs/commit/5222a279c7c298c497d04b22c47b27654fdb9953)
+- Actions 记录：[首次构建和部署](https://github.com/Ottor1/my-docs/actions/runs/42643324135)
+
+![首次 push 触发的构建与部署均成功](images/记录截图5.png)
+
+### 2.7 访问网站并检查四页导航
+
+部署完成后，我打开 <https://ottor1.github.io/my-docs/>，依次访问首页、关于、使用指南和 API 参考。四页均能正常打开，页面间链接、表格和代码块也能显示。
+
+网站左侧的四个菜单用于切换页面；右侧的“目录”对应当前页面中的各级标题。首页正文中的“四页内容导航”表格也提供了各页入口。检查后，我保存了带浏览器地址栏的网站截图。
+
+![公开网站效果与四页导航](images/记录截图6.png)
+
+### 2.8 第二次推送验证自动更新
+
+首次部署后，我在 docs/index.md 末尾加入一段容易辨认的文字：
+
+> 自动部署验证：这是我第二次推送后更新的内容。
+
+随后完成提交并推送到 main，提交说明为“验证文档修改后自动更新网站”。第二次运行 #2 对应提交 18034b5，截图中的 Triggered via push 表明它由这次推送自动触发。运行结束后，build、deploy 和总状态均为 Success。
+
+- 对应提交：[18034b5](https://github.com/Ottor1/my-docs/commit/18034b5e9759b5b389f8ef549961589ba6e1a574)
+- Actions 记录：[第二次 push 自动更新网站](https://github.com/Ottor1/my-docs/actions/runs/42650554962)
+
+![第二次 push 自动触发且运行成功](images/记录截图7-1.png)
+
+运行成功后，我刷新同一个网站地址，确认首页出现新增文字。这样可以把本次源码修改、自动部署记录和网页变化对应起来，验证修改文档后网站会自动更新。
+
+![第二次部署后首页显示新增验证文字](images/记录截图7-2.png)
 
 ## 3. 问题与解决
 
@@ -102,6 +135,12 @@ python -m venv .venv
 ### 3.3 找不到 Pages 发布设置
 
 开始时我进入了个人账号的 Pages 设置，只能看到 `Verified domains`。后来进入 `Ottor1/my-docs` 仓库的 Settings，才找到课程中要求的发布来源选项。账号设置和仓库设置虽然都有 Pages，管理的内容不同。
+
+### 3.4 提交后没有出现新的部署
+
+第二次操作时，本地已经有新提交，但 GitHub 仍显示第一次提交，Actions 列表也没有新运行。检查后发现我完成了 commit，还没有把提交 push 到远端。本地显示 ahead 1，表示有一个提交尚未推送。
+
+执行 git push origin main 后，远端收到新提交，Actions 自动产生运行 #2。这次操作让我分清了三个阶段：commit 保存本地版本，push 把提交传到 GitHub，之后才由工作流构建和部署。
 
 ## 4. 原理理解
 
